@@ -1,4 +1,3 @@
-
 ## 🔁 Redo Log Multiplexing
 
 ---
@@ -9,20 +8,15 @@ Redo logs store **all changes made to the database**, helping in **instance reco
 
 ---
 
-### 🧾 What Redo Logs Contain:
+### 🧾 What Redo Logs Contain
 
 Redo logs capture **every change made to data** at a **low level**, such as:
 
-* 📝 **DML changes**:
-  `INSERT`, `UPDATE`, `DELETE` — before/after image of modified rows
-* 🔧 **DDL operations**:
-  `CREATE TABLE`, `ALTER INDEX`, etc.
-* 🧱 **Undo data**:
-  Rollback data needed to reverse uncommitted transactions
-* 📦 **Transaction control**:
-  Marks for `COMMIT` and `ROLLBACK`
-* 🔄 **Data dictionary changes**:
-  Updates to system metadata like table/user definitions
+* 📝 **DML changes** — `INSERT`, `UPDATE`, `DELETE`
+* 🔧 **DDL operations** — `CREATE TABLE`, `ALTER INDEX`, etc.
+* 🧱 **Undo data** — rollback data for uncommitted transactions
+* 📦 **Transaction control** — markers for `COMMIT` and `ROLLBACK`
+* 🔄 **Data dictionary changes** — system metadata updates
 * 📚 **Temporary tablespace activity** (during recovery if used)
 
 > ✅ Redo logs **do NOT record `SELECT` statements** — only **modifications** to data
@@ -49,8 +43,7 @@ flowchart LR
     style C fill:#fbeee6,stroke:#d35400,stroke-width:2px
 ```
 
-🌀 Oracle continuously **cycles through redo log groups**:
-It writes to `CURRENT`, then switches to the next group in the sequence.
+🌀 Oracle continuously **cycles through redo log groups** — it writes to the `CURRENT` group, then switches in sequence.
 
 ---
 
@@ -60,9 +53,9 @@ To avoid **data loss or corruption** in case of disk or file failures.
 
 ### ✅ Benefits of Multiplexing:
 
-* ✅ Reduces chance of losing redo data
-* ✅ Continues operation even if one member is corrupted
-* ✅ Oracle recommends it in **all production environments**
+* Reduces chance of losing redo data
+* Continues operation even if one member is corrupted
+* Recommended by Oracle in **all production environments**
 
 ---
 
@@ -79,15 +72,17 @@ To avoid **data loss or corruption** in case of disk or file failures.
 ```sql
 SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 ```
-> ⚠️ **Only `INACTIVE` groups/members can be dropped safely**
 
-### 📏 How to Check Redolog Size (MB)
+> ⚠️ Only `INACTIVE` groups/members can be dropped safely.
 
-Use the following query:
+---
+
+### 📏 How to Check Redo Log Size (MB)
 
 ```sql
 SELECT GROUP#, BYTES/1024/1024 AS SIZE_MB FROM V$LOG ORDER BY GROUP#;
 ```
+
 ---
 
 ## ⚙️ Redo Log Multiplexing – Practical Steps (for ORADB)
@@ -96,26 +91,23 @@ SELECT GROUP#, BYTES/1024/1024 AS SIZE_MB FROM V$LOG ORDER BY GROUP#;
 
 ### 🔍 Step 1: Validate Existing Redo Log Members
 
-Connect to SQL\*Plus:
-
 ```bash
 sqlplus / as sysdba
 ```
 
-Run:
-
 ```sql
 SELECT GROUP#, MEMBER FROM V$LOGFILE ORDER BY GROUP#;
-EXIT;
 ```
 
-👁️ Check if redo log members currently exist under `/u01/oradata/ORADB`.
+👁️ Confirm redo logs exist under `/u01/oradata/ORADB`.
+
+```sql
+EXIT;
+```
 
 ---
 
 ### 📁 Step 2: Create Directory for New Members
-
-If not already present:
 
 ```bash
 mkdir -p /u02/oradata/ORADB
@@ -147,21 +139,29 @@ ALTER DATABASE ADD LOGFILE MEMBER '/u02/oradata/ORADB/redo03b.log' TO GROUP 3;
 SELECT GROUP#, MEMBER FROM V$LOGFILE ORDER BY GROUP#;
 ```
 
-Confirm that each group has members in both directories (`/u01` and `/u02`).
+Confirm that each group has members in both `/u01` and `/u02`.
+
+```sql
+EXIT;
+```
 
 ---
 
-## 🗑️ Drop Old Redo Log Members 
+## 🗑️ Drop Old Redo Log Members
 
 ---
 
-### 🔍 Step 5.1: Check Log Group Status
+### 🔍 Step 5.1: Check Log Group Statuses
+
+```bash
+sqlplus / as sysdba
+```
 
 ```sql
 SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 ```
 
-🎯 Look for **`INACTIVE`** groups — only those are eligible for dropping.
+🎯 Identify groups with `INACTIVE` status.
 
 ---
 
@@ -174,24 +174,46 @@ ALTER SYSTEM SWITCH LOGFILE;
 ALTER SYSTEM CHECKPOINT;
 ```
 
-🔁 Repeat the query until the targeted group becomes `INACTIVE`.
+🔁 Re-check until the **targeted group becomes `INACTIVE`**:
+
+```sql
+SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
+```
 
 ---
 
-### ❌ Step 5.3: Drop Old Redo Log Members from `/u01` (If INACTIVE)
+### 🧠 Step 5.3: Identify Which Members to Drop
+
+Run:
+
+```sql
+SELECT L.GROUP#, L.MEMBER, LG.STATUS
+FROM V$LOGFILE L
+JOIN V$LOG LG ON L.GROUP# = LG.GROUP#
+WHERE L.MEMBER LIKE '/u01/oradata/ORADB/%';
+```
+
+✅ Only members from `INACTIVE` groups can be dropped.
+
+---
+
+### ❌ Step 5.4: Drop Old Redo Log Members from `/u01`
 
 ```sql
 ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo01a.log';
 ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo02a.log';
 ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo03a.log';
+```
+
+> 🚫 Skip any member that still belongs to a `CURRENT` or `ACTIVE` group.
+
+```sql
 EXIT;
 ```
 
-🚫 Do **NOT** drop members from `CURRENT` or `ACTIVE` groups.
-
 ---
 
-### 🧹 Step 5.4: Remove Physical Files (Manually at OS Level)
+### 🧹 Step 5.5: Remove Physical Files at OS Level
 
 ```bash
 rm /u01/oradata/ORADB/redo01a.log
@@ -199,11 +221,11 @@ rm /u01/oradata/ORADB/redo02a.log
 rm /u01/oradata/ORADB/redo03a.log
 ```
 
-📁 Oracle **does not** delete the file automatically.
+📁 Oracle **does not** delete physical redo log files automatically.
 
 ---
 
-### 📌 Summary Table
+## 🧾 Summary Table
 
 | ✅ Step | Description                                       |
 | ------ | ------------------------------------------------- |
@@ -213,7 +235,8 @@ rm /u01/oradata/ORADB/redo03a.log
 | 4      | Verify new members are added correctly            |
 | 5.1    | Check if log groups are `INACTIVE`                |
 | 5.2    | Force switches + checkpoint to make them inactive |
-| 5.3    | Drop old members from `/u01`                      |
-| 5.4    | Manually remove old redo files from disk          |
+| 5.3    | Query members that belong to `INACTIVE` groups    |
+| 5.4    | Drop old members from `/u01`                      |
+| 5.5    | Manually remove old redo files from disk          |
 
 ---
