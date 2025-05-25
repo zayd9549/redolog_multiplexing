@@ -79,7 +79,23 @@ SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 
 > ⚠️ **Only `INACTIVE` groups/members can be dropped safely**
 
+---
+
+### 🔎 Understanding Redo Log Status
+
+* **CURRENT**: The group that Oracle is currently writing to
+* **ACTIVE**: Required for crash recovery — Oracle has finished writing to it, but it hasn't been archived yet
+* **INACTIVE**: No longer needed for recovery and can be reused or dropped
+
+---
+
 ### 📏 How to Check Redolog Size (MB)
+
+Connect to SQL\*Plus:
+
+```bash
+sqlplus / as sysdba
+```
 
 Use the following query:
 
@@ -97,11 +113,6 @@ This helps you understand how large your redo logs are, to plan disk space and p
 
 ### 🔍 Step 1: Validate Existing Redo Log Members
 
-Connect to SQL\*Plus:
-
-```bash
-sqlplus / as sysdba
-```
 
 Run:
 
@@ -109,13 +120,10 @@ Run:
 SET LINESIZE 200
 COL MEMBER FOR A60
 SELECT GROUP#, MEMBER FROM V$LOGFILE ORDER BY GROUP#;
+EXIT;
 ```
 
 👁️ Check if redo log members currently exist under `/u01/oradata/ORADB`.
-
-```sql
-EXIT;
-```
 
 ---
 
@@ -157,10 +165,6 @@ SELECT GROUP#, MEMBER FROM V$LOGFILE ORDER BY GROUP#;
 
 Confirm that each group has members in both directories (`/u01` and `/u02`).
 
-```sql
-EXIT;
-```
-
 ---
 
 ## 🗑️ Drop Old Redo Log Members
@@ -169,9 +173,6 @@ EXIT;
 
 ### 🔍 Step 5.1: Check Log Group Status
 
-```bash
-sqlplus / as sysdba
-```
 
 ```sql
 COL STATUS FOR A10
@@ -208,7 +209,7 @@ SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 If **Group 1** is `INACTIVE`, then:
 
 ```sql
-ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo01.log';
+ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo01b.log';
 ```
 
 Switch logs and check for **Group 2**:
@@ -222,7 +223,7 @@ SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 If **Group 2** is now `INACTIVE`, then:
 
 ```sql
-ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo02.log';
+ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo02b.log';
 ```
 
 Repeat for **Group 3**:
@@ -236,7 +237,7 @@ SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 If **Group 3** is now `INACTIVE`, then:
 
 ```sql
-ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo03.log';
+ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo03b.log';
 EXIT;
 ```
 
@@ -254,6 +255,32 @@ rm /u01/oradata/ORADB/redo03.log
 
 ---
 
+### ➕ Step 5.5: (Optional) Resize Redo Logs – Drop and Recreate
+
+If you want to resize redo logs (e.g., from 50MB to 100MB), follow these steps **after multiplexing is complete**:
+
+1. Ensure all groups are `INACTIVE` (except the `CURRENT` group).
+2. Drop one group at a time:
+
+```sql
+ALTER DATABASE DROP LOGFILE GROUP 2;
+```
+
+3. Recreate it with desired size and members:
+
+```sql
+ALTER DATABASE ADD LOGFILE GROUP 2 (
+  '/u01/oradata/ORADB/redo02a.log',
+  '/u02/oradata/ORADB/redo02b.log'
+) SIZE 100M;
+```
+
+Repeat for other groups.
+
+> ⚠️ Never drop the `CURRENT` log group.
+
+---
+
 ### 📌 Summary Table
 
 | ✅ Step | Description                                       |
@@ -266,5 +293,6 @@ rm /u01/oradata/ORADB/redo03.log
 | 5.2    | Force switches + checkpoint to make them inactive |
 | 5.3    | Drop old members from `/u01` (one-by-one)         |
 | 5.4    | Manually remove old redo files from disk          |
+| 5.5    | Resize redo logs by recreating them    |
 
 ---
