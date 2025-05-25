@@ -79,9 +79,15 @@ To avoid **data loss or corruption** in case of disk or file failures.
 ```sql
 SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 ```
-
 > ⚠️ **Only `INACTIVE` groups/members can be dropped safely**
 
+### 📏 How to Check Redolog Size (MB)
+
+Use the following query:
+
+```sql
+SELECT GROUP#, BYTES/1024/1024 AS SIZE_MB FROM V$LOG ORDER BY GROUP#;
+```
 ---
 
 ## ⚙️ Redo Log Multiplexing – Practical Steps (for ORADB)
