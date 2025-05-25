@@ -211,14 +211,6 @@ If **Group 1** is `INACTIVE`, then:
 ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo01.log';
 ```
 
-```sql
-EXIT;
-```
-
-```bash
-sqlplus / as sysdba
-```
-
 Switch logs and check for **Group 2**:
 
 ```sql
@@ -233,14 +225,6 @@ If **Group 2** is now `INACTIVE`, then:
 ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo02.log';
 ```
 
-```sql
-EXIT;
-```
-
-```bash
-sqlplus / as sysdba
-```
-
 Repeat for **Group 3**:
 
 ```sql
@@ -253,9 +237,6 @@ If **Group 3** is now `INACTIVE`, then:
 
 ```sql
 ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo03.log';
-```
-
-```sql
 EXIT;
 ```
 
