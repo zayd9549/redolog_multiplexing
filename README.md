@@ -1,10 +1,26 @@
 ## 🔁 Redo Log Multiplexing 
 
----
-
-## 📘 What Are Redo Logs?
+### 📘 What Are Redo Logs?
 
 Redo logs store **all changes made to the database**, helping in **instance recovery** if there's a failure.
+
+### 🧾 What Redo Logs Contain:
+
+Redo logs capture **every change made to data** at a **low level**, such as:
+
+* 📝 **DML changes**:
+  `INSERT`, `UPDATE`, `DELETE` — actual before/after image of row changes
+* 🔧 **DDL operations**:
+  `CREATE TABLE`, `ALTER INDEX`, etc.
+* 🧱 **Undo (rollback) data**:
+  To help roll back uncommitted transactions
+* 📦 **Transaction control**:
+  Marks for `COMMIT` and `ROLLBACK`
+* 🔄 **Changes to data dictionary**:
+  System metadata like table definitions or user roles
+* 📚 **Temporary tablespace activity**, if needed for recovery
+
+> ✅ Redo logs **do not store SELECT statements** — only **changes** to data
 
 ### 🧩 Structure
 
