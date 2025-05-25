@@ -1,6 +1,3 @@
-Here's your **complete and final document** with all sections updated, emojis, explanations, validation steps, visual flow, and safety warnings. This version is designed to be both **educational** and **practical**, ideal for hands-on learning or teaching.
-
----
 
 ## 🔁 Redo Log Multiplexing
 
@@ -57,7 +54,7 @@ It writes to `CURRENT`, then switches to the next group in the sequence.
 
 ---
 
-## 🔒 Why Multiplex Redo Logs?
+### 🔒 Why Multiplex Redo Logs?
 
 To avoid **data loss or corruption** in case of disk or file failures.
 
@@ -69,7 +66,7 @@ To avoid **data loss or corruption** in case of disk or file failures.
 
 ---
 
-## 🧠 Redo Log Statuses (`V$LOG`)
+### 🧠 Redo Log Statuses (`V$LOG`)
 
 | Status     | Meaning                                        |
 | ---------- | ---------------------------------------------- |
@@ -87,7 +84,7 @@ SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 
 ---
 
-# ⚙️ Redo Log Multiplexing – Practical Steps (for ORADB)
+## ⚙️ Redo Log Multiplexing – Practical Steps (for ORADB)
 
 ---
 
@@ -148,7 +145,7 @@ Confirm that each group has members in both directories (`/u01` and `/u02`).
 
 ---
 
-# 🗑️ Drop Old Redo Log Members 
+## 🗑️ Drop Old Redo Log Members 
 
 ---
 
@@ -200,7 +197,7 @@ rm /u01/oradata/ORADB/redo03a.log
 
 ---
 
-## 📌 Summary Table
+### 📌 Summary Table
 
 | ✅ Step | Description                                       |
 | ------ | ------------------------------------------------- |
