@@ -255,7 +255,7 @@ rm /u01/oradata/ORADB/redo03.log
 
 ---
 
-### ➕ Step 5.5: (Optional) Resize Redo Logs – Drop and Recreate
+### ➕ Step 5.5: Resize Redo Logs – Drop and Recreate
 
 If you want to resize redo logs (e.g., from 50MB to 100MB), follow these steps **after multiplexing is complete**:
 
@@ -263,15 +263,16 @@ If you want to resize redo logs (e.g., from 50MB to 100MB), follow these steps *
 2. Drop one group at a time:
 
 ```sql
-ALTER DATABASE DROP LOGFILE GROUP 2;
+SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
+ALTER DATABASE DROP LOGFILE GROUP 1;
 ```
 
 3. Recreate it with desired size and members:
 
 ```sql
-ALTER DATABASE ADD LOGFILE GROUP 2 (
-  '/u01/oradata/ORADB/redo02a.log',
-  '/u02/oradata/ORADB/redo02b.log'
+ALTER DATABASE ADD LOGFILE GROUP 1 (
+  '/u01/oradata/ORADB/redo01a.log',
+  '/u02/oradata/ORADB/redo01b.log'
 ) SIZE 100M;
 ```
 
