@@ -263,11 +263,22 @@ If you want to resize redo logs (e.g., from 50MB to 100MB), follow these steps *
 2. Drop one group at a time:
 
 ```sql
+SET LINESIZE 200
+COL MEMBER FOR A60
+SELECT GROUP#, MEMBER FROM V$LOGFILE ORDER BY GROUP#;
+
 SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 ALTER DATABASE DROP LOGFILE GROUP 1;
 ```
+3: Remove Physical File  at OS Level
 
-3. Recreate it with desired size and members:
+Example:
+
+```bash
+rm /u01/oradata/ORADB/redo01.log
+```
+
+4. Recreate it with desired size and members:
 
 ```sql
 ALTER DATABASE ADD LOGFILE GROUP 1 (
