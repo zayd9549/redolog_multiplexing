@@ -209,7 +209,7 @@ SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 If **Group 1** is `INACTIVE`, then:
 
 ```sql
-ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo01b.log';
+ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo01.log';
 ```
 
 Switch logs and check for **Group 2**:
@@ -223,7 +223,7 @@ SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 If **Group 2** is now `INACTIVE`, then:
 
 ```sql
-ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo02b.log';
+ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo02.log';
 ```
 
 Repeat for **Group 3**:
@@ -237,7 +237,7 @@ SELECT GROUP#, STATUS FROM V$LOG ORDER BY GROUP#;
 If **Group 3** is now `INACTIVE`, then:
 
 ```sql
-ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo03b.log';
+ALTER DATABASE DROP LOGFILE MEMBER '/u01/oradata/ORADB/redo03.log';
 EXIT;
 ```
 
